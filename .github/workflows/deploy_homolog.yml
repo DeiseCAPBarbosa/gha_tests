@@ -5,10 +5,18 @@ on:
     types: opened
 
 jobs:
+  welcome:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome
+        run: echo "New Issue"
+        
   setup:
     if: contains(github.event.issue.labels.*.name, 'deploy-automation')
     name: Setup
     runs-on: ubuntu-latest
     steps:
       - name: Setup Deploy
-        run: echo "Hello World"
+        run: echo "Deploy"
+
