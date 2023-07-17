@@ -1,0 +1,14 @@
+name: Deploy automation
+
+on:
+  issues:
+    types: opened
+
+jobs:
+  setup:
+    if: contains(github.event.issue.labels.*.name, 'deploy-automation')
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Deploy
+        run: echo "Hello World"
