@@ -6,12 +6,12 @@ on:
 
 jobs:
   welcome:
-    name: Setup
+    name: Welcome
     runs-on: ubuntu-latest
     steps:
       - name: Welcome
         run: echo "New Issue"
-        
+
   setup:
     if: contains(github.event.issue.labels.*.name, 'deploy-automation')
     name: Setup
