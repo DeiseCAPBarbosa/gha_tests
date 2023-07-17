@@ -25,3 +25,8 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           body: |
             You can track the action execution in [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+     - name: Exibir conteúdo da branch homolog
+        run: |
+          git checkout homolog
+          cat .homolog
