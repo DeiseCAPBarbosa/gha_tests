@@ -64,8 +64,8 @@ jobs:
       - name: Merge branch
         run: |
           set +e
-          git config --global user.email "robot@github.com"
-          git config --global user.name "Homolog Robot"
+          git config --global user.email "decabarbosa@leroymerlin.com.br"
+          git config --global user.name "DeiseCAPBarbosa"
           git checkout homolog
           git merge ${{ steps.branches.outputs.values }}
 
