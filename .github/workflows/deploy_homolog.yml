@@ -16,6 +16,8 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'deploy-automation')
     name: Setup
     needs: [ welcome ]
+    outputs:
+      branches: ${{ steps.branches.outputs.values }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup Deploy
@@ -36,10 +38,14 @@ jobs:
           git fetch --all
 
       - name: Obtém a branch a ser mergeada
-        id: branch
+        id: branches
         run: |
           set +e
-          branches=`python3 .github/support/deploy-homolog.py "parse-branches" "${{ github.event.issue.body }}"`
+          values=`python3 .github/support/deploy-homolog.py "parse-branches" "${{ github.event.issue.body }}"`
+          echo $values
+          echo "values<<EOF" >> $GITHUB_OUTPUT
+          echo "$values" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       # TODO: Testar se sempre está sendo executado!
       - name: Close issue
@@ -49,4 +55,5 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           comment: |
             ## Finish :rocket:
+            Branches updated: ${{ steps.branches.outputs.values }}
             Automation completed.
