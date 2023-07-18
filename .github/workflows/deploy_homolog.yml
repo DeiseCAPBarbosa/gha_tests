@@ -61,6 +61,19 @@ jobs:
           git checkout ${{ steps.branches.outputs.values }}
           git rebase develop
 
+      - name: Merge branch
+        run: |
+          set +e
+          git config --global user.email "robot@github.com"
+          git config --global user.name "Homolog Robot"
+          git checkout homolog
+          git merge ${{ steps.branches.outputs.values }}
+
+      - name: Push branch
+        run: |
+          set +e
+          git push origin homolog
+
       # TODO: Testar se sempre está sendo executado!
       - name: Close issue
         if: (failure() || success()) && !cancelled()
