@@ -87,9 +87,11 @@ jobs:
       #     git push origin homolog
 
   close-issue:
-    if: (failure() || success()) && !cancelled()
+    if: !cancelled()
+
+    # if: (failure() || success()) && !cancelled()
     name: Update Branches
-    needs: [ merge-branch ]
+    needs: [ setup, merge-branch ]
     runs-on: ubuntu-latest
     steps:
       - name: Close issue with success
@@ -99,7 +101,7 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           comment: |
             ## Finish :rocket:
-            Branches updated: ${{ steps.branches.outputs.values }}
+            Branches updated: ${{ fromJSON( needs.setup.outputs.branches ) }}
             Automation completed.
 
       - name: Close issue with failure
@@ -110,4 +112,5 @@ jobs:
           comment: |
             ## Error :sob:
             Automation failed.
+            Branches failed: ${{ fromJSON( needs.setup.outputs.branches ) }}
             You can view the error accessing the [action log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
