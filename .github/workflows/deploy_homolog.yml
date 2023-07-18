@@ -64,8 +64,8 @@ jobs:
       - name: Merge branch
         run: |
           set +e
-          git config --global user.email "decabarbosa@leroymerlin.com.br"
-          git config --global user.name "DeiseCAPBarbosa"
+          git config --global user.email "robot@github.com"
+          git config --global user.name "Homolog Robot"
           git checkout homolog
           git merge ${{ steps.branches.outputs.values }}
 
@@ -75,8 +75,18 @@ jobs:
           git push origin homolog
 
       # TODO: Testar se sempre está sendo executado!
-      - name: Close issue
-        if: (failure() || success()) && !cancelled()
+      - name: Close issue when failed
+        if: failure() && !cancelled()
+        uses: peter-evans/close-issue@v2
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: |
+            ## Failed :cry:
+            Branches Failed Updated: ${{ steps.branches.outputs.values }}
+            Automation completed.
+      
+      - name: Close issue when success
+        if: success() && !cancelled()
         uses: peter-evans/close-issue@v2
         with:
           issue-number: ${{ github.event.issue.number }}
