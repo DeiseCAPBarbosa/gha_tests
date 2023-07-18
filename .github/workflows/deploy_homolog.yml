@@ -5,17 +5,9 @@ on:
     types: opened
 
 jobs:
-  welcome:
-    name: Welcome
-    runs-on: ubuntu-latest
-    steps:
-      - name: Welcome
-        run: echo "New Issue"
-
   setup:
     if: contains(github.event.issue.labels.*.name, 'deploy-automation')
     name: Setup
-    needs: [ welcome ]
     outputs:
       branches: ${{ steps.branches.outputs.values }}
     runs-on: ubuntu-latest
@@ -35,7 +27,16 @@ jobs:
 
       - name: Atualizar branches
         run: |
+          git config --global user.email "robot@github.com"
+          git config --global user.name "Homolog Robot"
           git fetch --all
+
+      - name: Rebase homolog
+        run: |
+          set +e
+          git checkout develop
+          git checkout homolog
+          git rebase develop
 
       - name: Obtém a branch a ser mergeada
         id: branches
@@ -47,45 +48,51 @@ jobs:
           echo "$values" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Rebase homolog
+  merge-branch:
+    if: contains(github.event.issue.labels.*.name, 'deploy-automation')
+    name: Update Branches
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch_name: ${{ fromJSON( needs.setup.outputs.branches ) }}
+      fail-fast: true
+      max-parallel: 1
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v2
+
+      - name: Config git
         run: |
-          set +e
           git config --global user.email "robot@github.com"
           git config --global user.name "Homolog Robot"
-          git checkout develop
-          git checkout homolog
-          git rebase develop
+          git fetch --all
 
       - name: Rebase branch
         run: |
           set +e
           git checkout develop
-          git checkout ${{ steps.branches.outputs.values }}
+          git checkout ${{ matrix.branch_name }}
           git rebase develop
 
       - name: Merge branch
         run: |
           set +e
           git checkout homolog
-          git merge ${{ steps.branches.outputs.values }}
+          git merge ${{ matrix.branch_name }}
 
-      - name: Push branch
-        run: |
-          set +e
-          git push origin homolog
+      # - name: Push branch
+      #   run: |
+      #     set +e
+      #     git push origin homolog
 
-      # TODO: Testar se sempre está sendo executado!
-      - name: Close issue when failed
-        if: failure() && !cancelled()
-        uses: peter-evans/close-issue@v2
-        with:
-          issue-number: ${{ github.event.issue.number }}
-          comment: |
-            ## Failed :cry:
-            Branches Failed Updated: ${{ steps.branches.outputs.values }}
-            Automation completed.
-      
-      - name: Close issue when success
+  close-issue:
+    if: (failure() || success()) && !cancelled()
+    name: Update Branches
+    needs: [ merge-branch ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issue with success
         if: success() && !cancelled()
         uses: peter-evans/close-issue@v2
         with:
@@ -94,3 +101,13 @@ jobs:
             ## Finish :rocket:
             Branches updated: ${{ steps.branches.outputs.values }}
             Automation completed.
+
+      - name: Close issue with failure
+        if: failure() && !cancelled()
+        uses: peter-evans/close-issue@v2
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: |
+            ## Error :sob:
+            Automation failed.
+            You can view the error accessing the [action log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
