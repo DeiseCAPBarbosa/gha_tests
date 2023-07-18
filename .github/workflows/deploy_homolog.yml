@@ -15,21 +15,38 @@ jobs:
   setup:
     if: contains(github.event.issue.labels.*.name, 'deploy-automation')
     name: Setup
+    needs: [ welcome ]
     runs-on: ubuntu-latest
     steps:
       - name: Setup Deploy
-        run: echo "Deploy"
-      - name: Save pipeline link on issue
+        run: echo "Setup deploy"
+
+      - name: Get action link
         uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            You can track the action execution in [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            Action link [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
       - name: Checkout do repositório
         uses: actions/checkout@v2
-      - name: Exibir conteúdo da branch homolog
+
+      - name: Atualizar branches
         run: |
           git fetch --all
-          git checkout homolog
-          cat .homolog
+
+      - name: Obtém a branch a ser mergeada
+        id: branch
+        run: |
+          set +e
+          branches=`python3 .github/support/deploy-homolog.py "parse-branches" "${{ github.event.issue.body }}"`
+
+      # TODO: Testar se sempre está sendo executado!
+      - name: Close issue
+        if: (failure() || success()) && !cancelled()
+        uses: peter-evans/close-issue@v2
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          comment: |
+            ## Finish :rocket:
+            Automation completed.
