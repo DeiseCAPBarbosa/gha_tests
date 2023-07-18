@@ -87,8 +87,6 @@ jobs:
       #     git push origin homolog
 
   close-issue:
-    if: !cancelled()
-
     # if: (failure() || success()) && !cancelled()
     name: Update Branches
     needs: [ setup, merge-branch ]
