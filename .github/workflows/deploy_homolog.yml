@@ -69,7 +69,6 @@ jobs:
       
       - name: Rebase homolog
         run: |
-          set +e
           git checkout develop
           git checkout homolog
           git rebase develop
