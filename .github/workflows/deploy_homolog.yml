@@ -76,6 +76,8 @@ jobs:
       - name: Rebase branch
         run: |
           git checkout homolog
+          git fetch origin homolog
+          git rebase origin/homolog
           git checkout ${{ matrix.branch_name }}
           echo "Rebase with homolog"
           git rebase homolog
