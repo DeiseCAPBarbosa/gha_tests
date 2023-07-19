@@ -27,19 +27,14 @@ jobs:
 
       - name: Checkout do repositório
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Atualizar branches
         run: |
           git config --global user.email "robot@github.com"
           git config --global user.name "Homolog Robot"
           git fetch --all
-
-      - name: Rebase homolog
-        run: |
-          set +e
-          git checkout develop
-          git checkout homolog
-          git rebase develop
 
       - name: Obtém a branch a ser mergeada
         id: branches
@@ -71,6 +66,12 @@ jobs:
           git config --global user.email "robot@github.com"
           git config --global user.name "Homolog Robot"
           git fetch --all
+      
+      - name: Rebase homolog
+        run: |
+          git checkout develop
+          git checkout homolog
+          git rebase develop
 
       - name: Rebase branch
         run: |
@@ -83,6 +84,11 @@ jobs:
         run: |
           git checkout homolog
           git merge --squash ${{ matrix.branch_name }}
+          
+          if ! grep -q "${{ matrix.branch_name }}" homolog_branches; then
+            echo ${{ matrix.branch_name }} >> homolog_branches
+          fi
+
           echo ${{ matrix.branch_name }} >> homolog-branches
           git add homolog-branches
           git commit -m "#merge#${{ matrix.branch_name }}"
